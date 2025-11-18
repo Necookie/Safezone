@@ -1,10 +1,14 @@
 # Python
+backend/.venv/
 backend/venv/
 __pycache__/
 
 # Node
 frontend/node_modules/
 
-# Flutter
+# Flutter (later you'll add mobile)
 mobile/.dart_tool/
 mobile/build/
+
+# Logs
+*.log
