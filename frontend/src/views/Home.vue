@@ -1,82 +1,65 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-6xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Safezone</h1>
-        <p class="text-lg text-gray-600">Play amazing games online</p>
+  <div class="home">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Welcome to Safezone</h1>
+        <p>Discover and play amazing games</p>
       </div>
+    </section>
 
-      <!-- Games Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div 
-          v-for="game in gamesData" 
-          :key="game.id"
-          @click="goToGame(game.id)"
-          class="cursor-pointer transform transition hover:scale-105"
-        >
-          <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl">
-            <!-- Game Card Image/Icon -->
-            <div class="h-48 bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
-              <span class="text-6xl">🎮</span>
-            </div>
+    <!-- Games Section -->
+    <section class="games-section">
+      <div class="container">
+        <h2>Featured Games</h2>
+        
+        <div v-if="loading" class="loading">
+          <p>Loading games...</p>
+        </div>
 
-            <!-- Card Content -->
-            <div class="p-6">
-              <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ game.title }}</h2>
-              <p class="text-gray-600 mb-4 line-clamp-2">{{ game.description }}</p>
-              
-              <!-- Game Stats -->
-              <div class="flex justify-between text-sm text-gray-500 mb-4">
-                <span>⭐ {{ game.rating }}</span>
-                <span>👥 {{ game.players }} players</span>
-              </div>
+        <div v-else-if="games.length > 0" class="games-grid">
+          <GameCard
+            v-for="game in games"
+            :key="game.id"
+            :title="game.title"
+            :description="game.description"
+            :rating="game.rating"
+            :players="game.players"
+            @click="goToGame(game.id)"
+          />
+        </div>
 
-              <!-- Play Button -->
-              <button 
-                class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition"
-              >
-                Play Now
-              </button>
-            </div>
-          </div>
+        <div v-else class="empty-state">
+          <p>No games available yet. Check back soon!</p>
         </div>
       </div>
-
-      <!-- Empty State -->
-      <div v-if="gamesData.length === 0" class="text-center py-12">
-        <p class="text-gray-500 text-lg">No games available yet. Check back soon!</p>
-      </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import GameCard from '../components/ui/GameCard.vue'
 
 const router = useRouter()
+const games = ref([])
+const loading = ref(true)
 
-const gamesData = ref([
-  {
-    id: 1,
-    title: 'Hill Racing 43',
-    description: 'Drive your car up hills and complete challenging levels. Use arrow keys to navigate through obstacles.',
-    url: 'http://127.0.0.1:5000/static/games/hill-racing-43/index.html',
-    instructions: 'Use arrow keys to drive your car up hills and complete the levels.',
-    rating: '4.5',
-    players: '1,234'
-  },
-  {
-    id: 2,
-    title: 'Cute Pong',
-    description: 'Classic pong game with a cute twist. Play against the AI and test your reflexes.',
-    url: 'http://127.0.0.1:5000/static/games/cute-pong/index.html',
-    instructions: 'Use mouse or touch to control the paddle and hit the ball.',
-    rating: '4.8',
-    players: '2,456'
+onMounted(async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/games')
+    if (response.ok) {
+      games.value = await response.json()
+    } else {
+      console.error('Failed to fetch games')
+    }
+  } catch (error) {
+    console.error('Error fetching games:', error)
+  } finally {
+    loading.value = false
   }
-])
+})
 
 const goToGame = (gameId) => {
   router.push(`/game/${gameId}`)
@@ -84,10 +67,101 @@ const goToGame = (gameId) => {
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.home {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F9FAFB 0%, var(--primary-light) 100%);
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  padding: 6rem 2rem;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(248, 117, 170, 0.2);
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin: 0 0 1rem 0;
+  font-weight: 800;
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  margin: 0;
+  opacity: 0.95;
+}
+
+.games-section {
+  padding: 4rem 2rem;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.games-section h2 {
+  font-size: 2rem;
+  color: var(--dark);
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9CA3AF;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 4rem 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+
+  .games-section {
+    padding: 2rem 1rem;
+  }
+
+  .games-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .games-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 3rem 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 1.5rem;
+  }
 }
 </style>
